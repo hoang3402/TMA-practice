@@ -13,11 +13,11 @@
     <script defer src="./index.js"></script>
 </head>
 <body>
-<div class="container mx-auto px-4 mt-6">
+<div class="container mx-auto w-1/2">
     <h1 class="text-3xl font-bold mb-4">My Todo List</h1>
     <form class="flex gap-5 mb-4" id="add-task-form">
         <input
-                class="border rounded-md p-2 block w-1/2"
+                class="border rounded-md p-2 block w-full"
                 id="new-task"
                 placeholder="Add a new task..."
                 type="text"
@@ -29,10 +29,10 @@
             Add Task
         </button>
     </form>
-    <table class="table-auto w-full border-collapse border border-slate-500">
+    <table class="table-auto border-collapse border border-slate-500 w-full">
         <thead>
         <tr>
-            <th scope="col">
+            <th class="" scope="col">
                 <span class="sr-only">Status</span>
             </th>
             <th class="p-2 text-xs tracking-wider text-left text-gray-700 uppercase dark:text-gray-400"
@@ -45,14 +45,6 @@
         </tr>
         </thead>
         <tbody id="todo-list">
-        <tr id="1">
-            <td class="border border-slate-700 flex items-center justify-center"><input type="checkbox"/></td>
-            <td class="border border-slate-700 pl-2">test</td>
-            <td class="border border-slate-700 flex items-center justify-center">
-                <span class="material-symbols-outlined" onclick="editTask(1)">edit</span>
-                <span class="material-symbols-outlined" onclick="deleteTask(1)">delete</span>
-            </td>
-        </tr>
         </tbody>
     </table>
 </div>

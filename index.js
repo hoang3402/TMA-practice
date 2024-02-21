@@ -1,28 +1,69 @@
 const addTaskForm = document.getElementById("add-task-form");
 const todoList = document.getElementById("todo-list");
 
+(() => {
+    console.log("Initializing...");
+
+    let todosData = JSON.parse(localStorage.getItem('todos') || '{}'); // Initialize with empty object if `todos` is absent
+
+    if (!todosData.hasOwnProperty('todos')) {
+        todosData = {todos: []};
+        localStorage.setItem('todos', JSON.stringify(todosData));
+    }
+
+    todosData.todos.forEach(todo => {
+        showTask(todo.id, todo.status, todo.content)
+    });
+})();
+
 class todo {
     constructor(id, status, content) {
         this.id = id;
         this.status = status;
         this.content = content;
     }
+
+    save() {
+        const todosData = JSON.parse(localStorage.getItem('todos') || '{}');
+        todosData.todos.push(this);
+        localStorage.setItem('todos', JSON.stringify(todosData));
+    }
+
+    static remove(id) {
+        let todosData = JSON.parse(localStorage.getItem('todos'));
+        todosData.todos = todosData.todos.filter(todo => todo.id !== id);
+        localStorage.setItem('todos', JSON.stringify(todosData));
+    }
+
+    static update(id, newStatus, newContent) {
+        let todosData = JSON.parse(localStorage.getItem('todos'));
+        const index = todosData.todos.findIndex(todo => todo.id === id);
+
+        if (index !== -1) {
+            todosData.todos[index].status = newStatus;
+            todosData.todos[index].content = newContent;
+            localStorage.setItem('todos', JSON.stringify(todosData));
+        } else {
+            console.warn(`Todo with ID ${id} not found for update.`);
+        }
+    }
 }
 
+// trigger when click add new task or enter
 addTaskForm.addEventListener("submit", (event) => {
     event.preventDefault();
 
     console.log("Click [Add task]");
 
     let newTask = document.getElementById("new-task");
-    // console.log(newTask.value);
 
     if (newTask.value === "") {
         alert('Task is empty, you must type somethings');
         return;
     }
-
-    createNewTask(newTask.value, false);
+    let id = `task-${Date.now()}`;
+    showTask(id, false, newTask.value);
+    new todo(id, false, newTask.value).save();
 
     reset(newTask);
 });
@@ -31,42 +72,34 @@ function reset(HtmlElement) {
     HtmlElement.value = "";
 }
 
-// value: [true, false]
-function createCheckbox(value) {
-    let checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.classList.add('mr-2');
-    checkbox.checked = value;
-    return checkbox;
-}
-
-function createNewTask(newTask, value) {
-    // Create a new table row element
+function showTask(id, status, content) {
     const newRow = document.createElement('tr');
-    newRow.id = `task-${Date.now()}`; // Generate unique ID
+    newRow.id = id;
 
     // Create table cells for checkbox, content, and actions
     const checkboxCell = document.createElement('td');
     checkboxCell.classList.add('border', 'border-slate-700', 'flex', 'items-center', 'justify-center');
     const checkboxInput = document.createElement('input');
     checkboxInput.type = 'checkbox';
+    checkboxInput.checked = status;
+    checkboxInput.onchange = () => updateStatus(id)
     checkboxCell.appendChild(checkboxInput);
 
     const contentCell = document.createElement('td');
     contentCell.classList.add('border', 'border-slate-700', 'pl-2');
-    contentCell.textContent = newTask;
+    contentCell.textContent = content;
 
     const actionsCell = document.createElement('td');
     actionsCell.classList.add('border', 'border-slate-700', 'flex', 'items-center', 'justify-center');
     const editIcon = document.createElement('span');
     editIcon.classList.add('material-symbols-outlined');
-    editIcon.dataset.taskId = newRow.id; // Store task ID for edit functionality
-    editIcon.onclick = () => editTask(editIcon.dataset.taskId); // Call editTask function
+    editIcon.dataset.taskId = id; // Store task ID for edit functionality
+    editIcon.onclick = () => editTask(id); // Call editTask function
     editIcon.textContent = 'edit';
     const deleteIcon = document.createElement('span');
     deleteIcon.classList.add('material-symbols-outlined');
-    deleteIcon.dataset.taskId = newRow.id; // Store task ID for delete functionality
-    deleteIcon.onclick = () => deleteTask(deleteIcon.dataset.taskId); // Call deleteTask function
+    deleteIcon.dataset.taskId = id; // Store task ID for delete functionality
+    deleteIcon.onclick = () => deleteTask(id); // Call deleteTask function
     deleteIcon.textContent = 'delete';
     actionsCell.appendChild(editIcon);
     actionsCell.appendChild(deleteIcon);
@@ -91,7 +124,24 @@ function editTask(id) {
         contentCell.textContent = contentCell.textContent.trim();
         contentCell.contentEditable = false;
         taskElement.classList.remove('editing');
+
+        let status = document
+            .getElementById(id)
+            .querySelector('input[type=checkbox]').checked;
+
+        todo.update(id, status, contentCell.textContent)
     });
+}
+
+function updateStatus(id) {
+    const taskElement = document.getElementById(id);
+    const contentCell = taskElement.querySelector('.pl-2');
+
+    let status = document
+        .getElementById(id)
+        .querySelector('input[type=checkbox]').checked;
+
+    todo.update(id, status, contentCell.textContent)
 }
 
 function deleteTask(id) {
@@ -99,5 +149,8 @@ function deleteTask(id) {
     if (confirmation) {
         const taskElement = document.getElementById(id);
         taskElement.parentNode.removeChild(taskElement);
+
+        todo.remove(id);
     }
 }
+
